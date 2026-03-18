@@ -28,6 +28,13 @@ const fadeUp = {
 function AppLayout({ children }) {
   const { ttsEnabled, toggleTts, lightMode, toggleLightMode } = useGameStore()
 
+  const navLinks = [
+    { to: '/',           label: 'Home' },
+    { to: '/play',       label: 'Play' },
+    { to: '/how-it-works', label: 'Learn' },
+    { to: '/languages',  label: '🌐 Lang' },
+  ]
+
   return (
     <div
       data-theme={lightMode ? 'light' : 'dark'}
@@ -40,7 +47,7 @@ function AppLayout({ children }) {
 
       <div className="relative z-10 w-full max-w-md px-4 py-4 flex flex-col gap-4">
 
-        {/* Header */}
+        {/* Header — logo + theme/TTS toggles only */}
         <header className="nm-card rounded-3xl px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🌾</span>
@@ -56,7 +63,6 @@ function AppLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Light/dark toggle */}
             <button
               type="button"
               onClick={toggleLightMode}
@@ -66,7 +72,6 @@ function AppLayout({ children }) {
               {lightMode ? '🌙' : '☀️'}
             </button>
 
-            {/* TTS toggle */}
             {isTtsSupported() && (
               <button
                 type="button"
@@ -77,26 +82,23 @@ function AppLayout({ children }) {
                 {ttsEnabled ? '🔊' : '🔇'}
               </button>
             )}
-
-            <nav className="flex gap-2 text-xs">
-              {[
-                { to: '/', label: 'Home' },
-                { to: '/play', label: 'Play' },
-                { to: '/how-it-works', label: 'Learn' },
-              ].map(({ to, label }) => (
-                <NavLink key={to} to={to}
-                  className={({ isActive }) =>
-                    `nav-pill px-3 py-1.5 rounded-full font-bold tracking-wide ${
-                      isActive ? 'btn-wheat' : 'nm-btn'
-                    }`
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
-            </nav>
           </div>
         </header>
+
+        {/* Nav bar — separate row so it never overflows */}
+        <nav className="nm-card rounded-2xl px-3 py-2 flex gap-2 justify-center">
+          {navLinks.map(({ to, label }) => (
+            <NavLink key={to} to={to}
+              className={({ isActive }) =>
+                `nav-pill flex-1 text-center px-2 py-1.5 rounded-xl text-xs font-bold tracking-wide ${
+                  isActive ? 'btn-wheat' : 'nm-btn'
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
         {/* Main */}
         <main className="flex-1 nm-card rounded-3xl px-5 py-5 flex justify-center">
@@ -123,7 +125,6 @@ function HomeScreen() {
 
   return (
     <motion.div className="flex flex-col gap-4 w-full" {...fadeUp}>
-      {/* Hero */}
       <div className="nm-glow-wheat rounded-3xl px-5 py-5 text-center">
         <div className="text-5xl mb-3 animate-bounce" style={{ animationDuration: '2.5s' }}>🚜</div>
         <h1 className="text-xl font-black leading-snug"
@@ -138,7 +139,6 @@ function HomeScreen() {
         </p>
       </div>
 
-      {/* Feature grid */}
       <div className="grid grid-cols-2 gap-3">
         {features.map(({ icon, title, desc }) => (
           <div key={title} className="feature-card nm-raised rounded-2xl px-4 py-4"
@@ -186,7 +186,7 @@ function PlayScreen() {
   const {
     deck, currentIndex, metrics, inDebtTrap,
     gameOver, gameOverReason, day, seasonPhase,
-    bestDaysSurvived, applyChoice, reset, ttsEnabled,
+    bestDaysSurvived, applyChoice, reset, ttsEnabled, ttsLang,
   } = useGameStore()
 
   const card    = deck[currentIndex]
@@ -194,14 +194,20 @@ function PlayScreen() {
   const best    = formatSeasonsAndDays(bestDaysSurvived ?? 0)
   const isWin   = gameOverReason === 'year_complete'
 
+  function cardPromptForLang(c) {
+    if (!c) return ''
+    if (ttsLang === 'hi-IN' && c.prompt_hi) return c.prompt_hi
+    if (ttsLang === 'ta-IN' && c.prompt_ta) return c.prompt_ta
+    return c.prompt
+  }
+
   useEffect(() => {
     if (!ttsEnabled || !card) return
-    speak(card.prompt, { lang: 'en-IN' })
+    speak(cardPromptForLang(card), { lang: ttsLang })
     return () => stopSpeech()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card?.id, ttsEnabled])
+  }, [card?.id, ttsEnabled, ttsLang])
 
-  /* Game over */
   if (gameOver) {
     return (
       <motion.div className="flex flex-col gap-4 w-full" {...fadeUp}>
@@ -239,12 +245,10 @@ function PlayScreen() {
     )
   }
 
-  /* Active play */
   return (
     <motion.div className="relative flex flex-col gap-3 w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <DebtTrapVisualizer active={inDebtTrap} />
 
-      {/* Season header */}
       <div className="nm-raised rounded-2xl px-4 py-3" style={{ border: '1px solid var(--border-wheat)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -275,7 +279,7 @@ function PlayScreen() {
         <span>{currentIndex + 1} / {deck.length} cards</span>
       </div>
 
-      <NarratorHint narrator={card?.narrator} audioKey={card?.audioKey} cardPrompt={card?.prompt} />
+      <NarratorHint narrator={card?.narrator} audioKey={card?.audioKey} cardPrompt={cardPromptForLang(card)} />
     </motion.div>
   )
 }
@@ -314,6 +318,112 @@ function HowItWorksScreen() {
   )
 }
 
+/* ─────────────────── LANGUAGES ─────────────────── */
+function LanguagesScreen() {
+  const { ttsLang, setTtsLang, ttsEnabled } = useGameStore()
+
+  const options = [
+    {
+      code: 'en-IN',
+      name: 'English',
+      native: 'English',
+      icon: '🇮🇳',
+      sample: 'You need money for seeds and fertilizer.',
+      note: 'Default language. Widely supported on all devices.',
+    },
+    {
+      code: 'hi-IN',
+      name: 'Hindi',
+      native: 'हिन्दी',
+      icon: '🇮🇳',
+      sample: 'आपको बीज और खाद के लिए पैसों की ज़रूरत है।',
+      note: 'Requires a Hindi voice installed on your device. Available on most Android phones and Windows.',
+    },
+    {
+      code: 'ta-IN',
+      name: 'Tamil',
+      native: 'தமிழ்',
+      icon: '🇮🇳',
+      sample: 'உங்களுக்கு விதைகள் மற்றும் உரத்திற்கு பணம் தேவை.',
+      note: 'Requires a Tamil voice installed on your device. Available on Android and some desktop browsers.',
+    },
+  ]
+
+  function handleSelect(code) {
+    setTtsLang(code)
+    stopSpeech()
+    if (ttsEnabled) {
+      const opt = options.find((o) => o.code === code)
+      if (opt) speak(opt.sample, { lang: code })
+    }
+  }
+
+  return (
+    <motion.div className="flex flex-col gap-4 w-full" {...fadeUp}>
+      <div>
+        <h2 className="text-lg font-black"
+          style={{ background: 'linear-gradient(90deg,#d4a843,#8bc34a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Voice Language
+        </h2>
+        <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+          Choose the language for text-to-speech. Tap a card to select and hear a sample.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {options.map(({ code, name, native, icon, sample, note }) => {
+          const active = ttsLang === code
+          return (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleSelect(code)}
+              className={`w-full text-left rounded-2xl px-4 py-4 transition-all duration-200 ${
+                active ? 'nm-glow-wheat' : 'nm-raised feature-card'
+              }`}
+              style={{ border: active ? '1px solid rgba(212,168,67,0.5)' : '1px solid var(--border-wheat)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl">{icon}</span>
+                  <div>
+                    <span className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{name}</span>
+                    <span className="ml-2 text-xs font-bold" style={{ color: 'var(--text-muted)' }}>{native}</span>
+                  </div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  active ? 'border-yellow-400' : 'border-gray-500'
+                }`}>
+                  {active && <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />}
+                </div>
+              </div>
+
+              <p className="text-xs italic leading-snug mb-2" style={{ color: 'var(--text-secondary)' }}>
+                "{sample}"
+              </p>
+              <p className="text-xs leading-snug" style={{ color: 'var(--text-muted)' }}>{note}</p>
+
+              {active && (
+                <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold"
+                  style={{ color: '#d4a843' }}>
+                  <span>✓</span>
+                  <span>Active — voice will read cards in {name}</span>
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {!ttsEnabled && (
+        <div className="nm-inset rounded-2xl px-4 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+          🔇 Voice is muted. Tap the 🔊 button in the header to enable audio.
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 /* ─────────────────── ROOT ─────────────────── */
 export default function App() {
   return (
@@ -323,6 +433,7 @@ export default function App() {
           <Route path="/"             element={<HomeScreen />} />
           <Route path="/play"         element={<PlayScreen />} />
           <Route path="/how-it-works" element={<HowItWorksScreen />} />
+          <Route path="/languages"    element={<LanguagesScreen />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

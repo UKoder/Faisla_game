@@ -36,6 +36,7 @@ const narratorMeta = {
 export function NarratorHint({ narrator, audioKey, cardPrompt }) {
   const meta       = narratorMeta[narrator] ?? narratorMeta.self
   const ttsEnabled = useGameStore((s) => s.ttsEnabled)
+  const ttsLang    = useGameStore((s) => s.ttsLang)
   const [playing, setPlaying] = useState(false)
 
   function handlePlay() {
@@ -47,7 +48,7 @@ export function NarratorHint({ narrator, audioKey, cardPrompt }) {
     }
     const text = cardPrompt ?? meta.tone
     setPlaying(true)
-    speak(text, { lang: 'en-IN' })
+    speak(text, { lang: ttsLang ?? 'en-IN' })
     setTimeout(() => {
       if (!window.speechSynthesis?.speaking) setPlaying(false)
     }, (text.length / 12) * 1000 + 500)
