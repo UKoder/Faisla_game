@@ -31,7 +31,7 @@ export default function App() {
   const Languages = isLandscape ? LandscapeLanguages : PortraitLanguages
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Shell>
         <Routes>
           <Route path="/"             element={<Home />} />

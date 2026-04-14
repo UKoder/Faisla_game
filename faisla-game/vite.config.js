@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.svg', 'icons/*.png'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
-        // Cache all navigation requests for offline SPA routing
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
@@ -29,7 +28,8 @@ export default defineConfig(({ mode }) => ({
         name: 'Faisla — Farmer Decision Game',
         short_name: 'Faisla',
         description: 'A financial literacy game for Indian farmers. Play offline, learn real-world money skills.',
-        start_url: '/',
+        start_url: mode === 'production' ? '/faisla-game/' : '/',
+        scope: mode === 'production' ? '/faisla-game/' : '/',
         display: 'standalone',
         orientation: 'any',
         background_color: '#0d0a04',
@@ -37,25 +37,19 @@ export default defineConfig(({ mode }) => ({
         categories: ['games', 'education'],
         icons: [
           {
-            src: '/icons/icon.svg',
+            src: mode === 'production' ? '/faisla-game/icons/icon.svg' : '/icons/icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any',
           },
           {
-            src: '/icons/icon-192.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'maskable',
-          },
-          {
-            src: '/icons/icon-192.png',
+            src: mode === 'production' ? '/faisla-game/icons/icon-192.png' : '/icons/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/icons/icon-512.png',
+            src: mode === 'production' ? '/faisla-game/icons/icon-512.png' : '/icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable any',
