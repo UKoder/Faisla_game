@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/Faisla_game/',   // replace with your actual repo name
   preview: {
     allowedHosts: 'all',
   },
