@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0d0a04"/>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="100%" r="80%">
+      <stop offset="0%" stop-color="#2d6a2f" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0d0a04" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Wheat stalk -->
+  <text x="256" y="340" font-size="260" text-anchor="middle" dominant-baseline="middle">🌾</text>
+  <!-- Bottom label -->
+  <text x="256" y="460" font-size="52" font-family="system-ui,sans-serif" font-weight="900"
+    text-anchor="middle" fill="#d4a843" letter-spacing="8">FAISLA</text>
+</svg>
